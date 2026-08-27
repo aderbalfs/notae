@@ -12,3 +12,9 @@ export async function requireAdminEventId(): Promise<string | null> {
   const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
   return verifyAdminSessionToken(token);
 }
+
+/** Garante que a sessão do admin autoriza especificamente este eventId. */
+export async function requireAdminForEvent(eventId: string): Promise<boolean> {
+  const sessionEventId = await requireAdminEventId();
+  return sessionEventId !== null && sessionEventId === eventId;
+}

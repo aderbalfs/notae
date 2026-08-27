@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function AdminLoginPage() {
+export default function NewEventPage() {
   const router = useRouter();
-  const [eventId, setEventId] = useState("");
+  const [name, setName] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,16 +15,27 @@ export default function AdminLoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch("/api/admin/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, pin }),
+        body: JSON.stringify({ name, pin }),
       });
+      const body = await res.json();
       if (!res.ok) {
-        setError("ID do evento ou PIN inválidos.");
+        setError(body.error ?? "Não foi possível criar o evento.");
         return;
       }
-      router.push(`/admin/${eventId}`);
+
+      const loginRes = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: body.eventId, pin }),
+      });
+      if (!loginRes.ok) {
+        router.push("/admin/login");
+        return;
+      }
+      router.push(`/admin/${body.eventId}`);
     } finally {
       setLoading(false);
     }
@@ -33,35 +43,36 @@ export default function AdminLoginPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center bg-white px-6">
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-full max-w-xs flex-col gap-4"
-      >
+      <form onSubmit={handleSubmit} className="flex w-full max-w-xs flex-col gap-4">
         <h1 className="text-center text-2xl font-bold text-brand-blue-dark">
-          Painel do administrador
+          Criar novo evento
         </h1>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-          ID do evento
+          Nome do evento
           <input
             className="h-12 rounded-lg border border-zinc-300 px-3 text-base focus:border-brand-blue focus:outline-none"
-            value={eventId}
-            onChange={(e) => setEventId(e.target.value)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Desfile 2026"
             required
-            autoComplete="off"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-          PIN de acesso
+          Defina um PIN de acesso
           <input
             className="h-12 rounded-lg border border-zinc-300 px-3 text-base tracking-widest focus:border-brand-blue focus:outline-none"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             type="password"
             inputMode="numeric"
+            minLength={4}
             required
           />
+          <span className="text-xs font-normal text-zinc-500">
+            Guarde este PIN — ele será pedido para acessar o painel deste evento.
+          </span>
         </label>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -71,15 +82,8 @@ export default function AdminLoginPage() {
           disabled={loading}
           className="h-12 rounded-full bg-brand-blue-dark text-base font-medium text-white disabled:opacity-50"
         >
-          {loading ? "Entrando..." : "Entrar"}
+          {loading ? "Criando..." : "Criar evento"}
         </button>
-
-        <Link
-          href="/admin/events/new"
-          className="text-center text-sm font-medium text-brand-blue"
-        >
-          Criar um novo evento
-        </Link>
       </form>
     </main>
   );

@@ -26,16 +26,6 @@ export default function NewEventPage() {
         setError(body.error ?? "Não foi possível criar o evento.");
         return;
       }
-
-      const loginRes = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!loginRes.ok) {
-        router.push("/admin/login");
-        return;
-      }
       router.push(`/admin/${body.eventId}`);
     } finally {
       setLoading(false);

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
 
 interface Participant {
@@ -37,7 +36,6 @@ export default function AdminEventPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = use(params);
-  const router = useRouter();
   const [data, setData] = useState<EventOverview | null>(null);
   const [participantsText, setParticipantsText] = useState("");
   const [judgesText, setJudgesText] = useState("");
@@ -45,7 +43,6 @@ export default function AdminEventPage({
   const [savingJudges, setSavingJudges] = useState(false);
   const [presentationActionId, setPresentationActionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loggingOut, setLoggingOut] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const loadOverview = useCallback(async () => {
@@ -126,32 +123,22 @@ export default function AdminEventPage({
     }
   }
 
-  async function handleLogout() {
-    setLoggingOut(true);
-    try {
-      await fetch("/api/admin/logout", { method: "POST" });
-      router.push("/admin/login");
-    } finally {
-      setLoggingOut(false);
-    }
-  }
-
   if (error && !data) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-zinc-700">{error}</p>
         <Link href="/admin/login" className="text-sm font-medium underline">
           Ir para o login
         </Link>
-      </main>
+      </div>
     );
   }
 
   if (!data) {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <p className="text-zinc-500">Carregando...</p>
-      </main>
+      </div>
     );
   }
 
@@ -160,33 +147,10 @@ export default function AdminEventPage({
   const hasOngoing = data.presentations.some((p) => p.status === "em_andamento");
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-6 py-10">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-blue-dark">{data.event.name}</h1>
-          <p className="text-sm text-zinc-500">Status: {data.event.status}</p>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <Link
-            href={`/admin/${eventId}/ao-vivo`}
-            className="text-sm font-medium text-brand-blue underline"
-          >
-            Votação ao vivo
-          </Link>
-          <Link
-            href={`/admin/${eventId}/resultados`}
-            className="text-sm font-medium text-brand-blue underline"
-          >
-            Ver apuração
-          </Link>
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="text-sm font-medium text-zinc-500 underline disabled:opacity-50"
-          >
-            {loggingOut ? "Saindo..." : "Sair"}
-          </button>
-        </div>
+    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-6 py-10">
+      <header>
+        <h1 className="text-2xl font-bold text-brand-blue-dark">{data.event.name}</h1>
+        <p className="text-sm text-zinc-500">Status: {data.event.status}</p>
       </header>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -315,6 +279,6 @@ export default function AdminEventPage({
           </ul>
         )}
       </section>
-    </main>
+    </div>
   );
 }

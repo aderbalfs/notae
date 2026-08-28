@@ -22,12 +22,12 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const body = await res.json();
       if (!res.ok) {
+        const body = await res.json();
         setError(body.error ?? "E-mail ou senha inválidos.");
         return;
       }
-      router.push(`/admin/${body.eventId}`);
+      router.push("/admin");
     } finally {
       setLoading(false);
     }

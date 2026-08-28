@@ -83,30 +83,27 @@ export default function AdminLiveVotingPage({
 
   if (error) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-zinc-700">{error}</p>
         <Link href="/admin/login" className="text-sm font-medium underline">
           Ir para o login
         </Link>
-      </main>
+      </div>
     );
   }
 
   if (!state) {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <p className="text-zinc-500">Carregando...</p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
-      <header className="flex items-center justify-between">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
+      <header>
         <h1 className="text-2xl font-bold text-brand-blue-dark">Votação ao vivo</h1>
-        <Link href={`/admin/${eventId}`} className="text-sm font-medium text-brand-blue underline">
-          Voltar ao painel
-        </Link>
       </header>
 
       {!state.currentPresentation ? (
@@ -173,6 +170,6 @@ export default function AdminLiveVotingPage({
           </section>
         </>
       )}
-    </main>
+    </div>
   );
 }

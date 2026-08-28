@@ -9,6 +9,34 @@
   --brand-blue: #208dcc;
   --brand-orange: #f7aa00;
   --brand-yellow: #f4e308;
+
+  /* Tokens base (shadcn/ui), mapeados para a paleta da marca — este app
+     não tem alternância de tema, então não há bloco .dark equivalente. */
+  --primary: var(--brand-blue-dark);
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: var(--brand-blue-dark);
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #eaf3fb;
+  --accent-foreground: var(--brand-blue-dark);
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #d4d4d8;
+  --ring: var(--brand-blue);
+  --popover: #ffffff;
+  --popover-foreground: var(--foreground);
+
+  /* Sidebar (componente ui/sidebar.tsx) */
+  --sidebar-background: #ffffff;
+  --sidebar-foreground: var(--brand-blue-dark);
+  --sidebar-primary: var(--brand-blue-dark);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eaf3fb;
+  --sidebar-accent-foreground: var(--brand-blue-dark);
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: var(--brand-blue);
 }
 
 @theme inline {
@@ -20,6 +48,31 @@
   --color-brand-yellow: var(--brand-yellow);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 body {

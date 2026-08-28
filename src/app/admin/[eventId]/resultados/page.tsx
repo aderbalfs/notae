@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { RankingBoard } from "@/components/ranking-board";
-import type { EventResults } from "@/lib/server/results";
+import { VoteBreakdownTable } from "@/components/vote-breakdown-table";
+import type { EventResults, EventVoteBreakdown } from "@/lib/server/results";
 
 export default function AdminResultsPage({
   params,
@@ -12,18 +13,25 @@ export default function AdminResultsPage({
 }) {
   const { eventId } = use(params);
   const [data, setData] = useState<EventResults | null>(null);
+  const [breakdown, setBreakdown] = useState<EventVoteBreakdown | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const res = await fetch(`/api/admin/events/${eventId}/results`);
+      const [resultsRes, votesRes] = await Promise.all([
+        fetch(`/api/admin/events/${eventId}/results`),
+        fetch(`/api/admin/events/${eventId}/votes`),
+      ]);
       if (cancelled) return;
-      if (!res.ok) {
+      if (!resultsRes.ok) {
         setError("Não foi possível carregar a apuração. Faça login novamente.");
         return;
       }
-      setData(await res.json());
+      setData(await resultsRes.json());
+      if (votesRes.ok) {
+        setBreakdown(await votesRes.json());
+      }
     })();
     return () => {
       cancelled = true;
@@ -66,6 +74,13 @@ export default function AdminResultsPage({
         <p className="text-sm text-zinc-500">Nenhum participante cadastrado.</p>
       ) : (
         <RankingBoard ranking={data.ranking} />
+      )}
+
+      {data.votingComplete && breakdown && breakdown.participants.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold text-brand-blue-dark">Votos por jurado</h2>
+          <VoteBreakdownTable judges={breakdown.judges} participants={breakdown.participants} />
+        </section>
       )}
     </div>
   );

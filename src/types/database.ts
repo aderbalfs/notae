@@ -1,4 +1,4 @@
-export type EventStatus = "draft" | "in_progress" | "finished";
+export type EventStatus = "draft" | "in_progress" | "finished" | "cancelled";
 export type PresentationStatus = "aguardando" | "em_andamento" | "encerrada";
 export type ActorType = "admin" | "judge" | "system";
 

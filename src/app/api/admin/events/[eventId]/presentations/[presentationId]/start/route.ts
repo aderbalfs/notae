@@ -35,6 +35,14 @@ export async function POST(
     );
   }
 
+  const { data: eventBefore } = await supabase.from("events").select("status").eq("id", eventId).single();
+  if (eventBefore?.status === "cancelled" || eventBefore?.status === "finished") {
+    return NextResponse.json(
+      { error: "Este evento está cancelado ou encerrado" },
+      { status: 409 }
+    );
+  }
+
   const { data: ongoing } = await supabase
     .from("presentations")
     .select("id")
@@ -58,13 +66,11 @@ export async function POST(
     return NextResponse.json({ error: "Falha ao iniciar apresentação" }, { status: 500 });
   }
 
-  const { data: event } = await supabase.from("events").select("status").eq("id", eventId).single();
-
   await supabase
     .from("events")
     .update({
       current_presentation_id: presentationId,
-      status: event?.status === "draft" ? "in_progress" : event?.status,
+      status: eventBefore?.status === "draft" ? "in_progress" : eventBefore?.status,
     })
     .eq("id", eventId);
 

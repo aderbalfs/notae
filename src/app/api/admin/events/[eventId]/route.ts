@@ -43,3 +43,27 @@ export async function GET(
     presentations: presentations ?? [],
   });
 }
+
+/**
+ * Apaga o evento definitivamente — participantes, jurados, apresentações,
+ * votos e logs somem junto (cascade no schema). Ação irreversível, por isso
+ * o front exige confirmação explícita antes de chamar esta rota.
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ eventId: string }> }
+) {
+  const { eventId } = await params;
+  if (!(await requireAdminForEvent(eventId))) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  const supabase = createSupabaseServiceClient();
+  const { error } = await supabase.from("events").delete().eq("id", eventId);
+
+  if (error) {
+    return NextResponse.json({ error: "Falha ao apagar o evento" }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

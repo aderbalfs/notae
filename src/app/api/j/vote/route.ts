@@ -67,6 +67,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const { data: event } = await supabase
+    .from("events")
+    .select("status")
+    .eq("id", judge.event_id)
+    .single();
+
+  if (event?.status === "cancelled" || event?.status === "finished") {
+    return NextResponse.json({ error: "Este evento não está mais aceitando votos" }, { status: 409 });
+  }
+
   const roundedScores = Object.fromEntries(
     VOTE_CRITERIA.map((c) => [c.key, Math.round(scores[c.key] * 10) / 10])
   ) as CriteriaScores;

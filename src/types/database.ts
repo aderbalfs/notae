@@ -9,7 +9,7 @@ export type EventRow = {
   id: string;
   name: string;
   status: EventStatus;
-  admin_pin_hash: string;
+  admin_user_id: string;
   current_presentation_id: string | null;
   created_at: string;
   updated_at: string;

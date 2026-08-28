@@ -15,3 +15,16 @@ export function createSupabaseServiceClient() {
     { auth: { persistSession: false } }
   );
 }
+
+/**
+ * Client com a anon key, usado apenas para validar e-mail/senha do admin
+ * via Supabase Auth (signInWithPassword). Nunca persiste sessão — a
+ * autorização das rotas continua sendo o cookie próprio (admin-session.ts).
+ */
+export function createSupabaseAuthClient() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false } }
+  );
+}

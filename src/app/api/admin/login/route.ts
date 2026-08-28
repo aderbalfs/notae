@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { verifyPin } from "@/lib/server/pin";
+import { createSupabaseAuthClient, createSupabaseServiceClient } from "@/lib/supabase/server";
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE_SECONDS,
@@ -10,8 +9,8 @@ import {
 import { logAction } from "@/lib/server/audit";
 
 const bodySchema = z.object({
-  eventId: z.string().uuid(),
-  pin: z.string().min(1),
+  email: z.string().trim().email("E-mail inválido"),
+  password: z.string().min(1, "Senha é obrigatória"),
 });
 
 export async function POST(request: NextRequest) {
@@ -19,21 +18,31 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Requisição inválida" }, { status: 400 });
   }
-  const { eventId, pin } = parsed.data;
+  const { email, password } = parsed.data;
+
+  const authClient = createSupabaseAuthClient();
+  const { data: signInData, error: signInError } = await authClient.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (signInError || !signInData.user) {
+    return NextResponse.json({ error: "E-mail ou senha inválidos" }, { status: 401 });
+  }
 
   const supabase = createSupabaseServiceClient();
-  const { data: event, error } = await supabase
+  const { data: event } = await supabase
     .from("events")
-    .select("id, admin_pin_hash")
-    .eq("id", eventId)
+    .select("id")
+    .eq("admin_user_id", signInData.user.id)
     .single();
 
-  if (error || !event || !verifyPin(pin, event.admin_pin_hash)) {
-    return NextResponse.json({ error: "PIN inválido" }, { status: 401 });
+  if (!event) {
+    return NextResponse.json({ error: "E-mail ou senha inválidos" }, { status: 401 });
   }
 
   const token = createAdminSessionToken(event.id);
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json({ ok: true, eventId: event.id });
   response.cookies.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [eventId, setEventId] = useState("");
-  const [pin, setPin] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -19,13 +19,14 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, pin }),
+        body: JSON.stringify({ email, password }),
       });
+      const body = await res.json();
       if (!res.ok) {
-        setError("ID do evento ou PIN inválidos.");
+        setError(body.error ?? "E-mail ou senha inválidos.");
         return;
       }
-      router.push(`/admin/${eventId}`);
+      router.push(`/admin/${body.eventId}`);
     } finally {
       setLoading(false);
     }
@@ -42,24 +43,25 @@ export default function AdminLoginPage() {
         </h1>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-          ID do evento
+          E-mail
           <input
             className="h-12 rounded-lg border border-zinc-300 px-3 text-base focus:border-brand-blue focus:outline-none"
-            value={eventId}
-            onChange={(e) => setEventId(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            autoComplete="username"
             required
-            autoComplete="off"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-          PIN de acesso
+          Senha
           <input
-            className="h-12 rounded-lg border border-zinc-300 px-3 text-base tracking-widest focus:border-brand-blue focus:outline-none"
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
+            className="h-12 rounded-lg border border-zinc-300 px-3 text-base focus:border-brand-blue focus:outline-none"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             type="password"
-            inputMode="numeric"
+            autoComplete="current-password"
             required
           />
         </label>
@@ -74,12 +76,15 @@ export default function AdminLoginPage() {
           {loading ? "Entrando..." : "Entrar"}
         </button>
 
-        <Link
-          href="/admin/events/new"
-          className="text-center text-sm font-medium text-brand-blue"
-        >
-          Criar um novo evento
-        </Link>
+        <p className="text-center text-sm text-zinc-500">
+          Ainda não tem uma conta?{" "}
+          <Link
+            href="/admin/events/new"
+            className="font-semibold text-brand-blue underline"
+          >
+            Crie seu evento e sua credencial de acesso
+          </Link>
+        </p>
       </form>
     </main>
   );

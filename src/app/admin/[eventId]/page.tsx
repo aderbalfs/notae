@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
 
 interface Participant {
@@ -36,6 +37,7 @@ export default function AdminEventPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = use(params);
+  const router = useRouter();
   const [data, setData] = useState<EventOverview | null>(null);
   const [participantsText, setParticipantsText] = useState("");
   const [judgesText, setJudgesText] = useState("");
@@ -43,6 +45,7 @@ export default function AdminEventPage({
   const [savingJudges, setSavingJudges] = useState(false);
   const [presentationActionId, setPresentationActionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const loadOverview = useCallback(async () => {
@@ -123,6 +126,16 @@ export default function AdminEventPage({
     }
   }
 
+  async function handleLogout() {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+      router.push("/admin/login");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
   if (error && !data) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
@@ -153,12 +166,21 @@ export default function AdminEventPage({
           <h1 className="text-2xl font-bold text-brand-blue-dark">{data.event.name}</h1>
           <p className="text-sm text-zinc-500">Status: {data.event.status}</p>
         </div>
-        <Link
-          href={`/admin/${eventId}/resultados`}
-          className="shrink-0 text-sm font-medium text-brand-blue underline"
-        >
-          Ver apuração
-        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <Link
+            href={`/admin/${eventId}/resultados`}
+            className="text-sm font-medium text-brand-blue underline"
+          >
+            Ver apuração
+          </Link>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="text-sm font-medium text-zinc-500 underline disabled:opacity-50"
+          >
+            {loggingOut ? "Saindo..." : "Sair"}
+          </button>
+        </div>
       </header>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

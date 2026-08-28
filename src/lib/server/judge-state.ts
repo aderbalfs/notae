@@ -2,6 +2,7 @@ import "server-only";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { resolveJudgeByToken } from "@/lib/server/require-judge";
 import { getEventResults, type RankingEntry } from "@/lib/server/results";
+import type { CriteriaScores } from "@/lib/criteria";
 import type { PresentationStatus } from "@/types/database";
 
 export interface JudgeHistoryItem {
@@ -16,6 +17,7 @@ export interface JudgeCurrentPresentation {
   participantName: string;
   status: PresentationStatus;
   myScore: number | null;
+  myScores: CriteriaScores | null;
 }
 
 export interface JudgeState {
@@ -55,7 +57,12 @@ export async function getJudgeState(token: string): Promise<JudgeState | null> {
         .from("presentations")
         .select("id, participant_id, status")
         .eq("event_id", judge.event_id),
-      supabase.from("votes").select("presentation_id, score").eq("judge_id", judge.id),
+      supabase
+        .from("votes")
+        .select(
+          "presentation_id, score, score_beleza_simpatia, score_postura_elegancia, score_traje_apresentacao, score_carisma_comunicacao, score_representatividade"
+        )
+        .eq("judge_id", judge.id),
     ]);
 
   if (!event || !participants || !presentations) return null;
@@ -63,18 +70,29 @@ export async function getJudgeState(token: string): Promise<JudgeState | null> {
   const results = await getEventResults(judge.event_id);
 
   const participantById = new Map(participants.map((p) => [p.id, p]));
-  const scoreByPresentation = new Map((votes ?? []).map((v) => [v.presentation_id, v.score]));
+  const voteByPresentation = new Map((votes ?? []).map((v) => [v.presentation_id, v]));
 
   const enriched = presentations
     .map((pres) => {
       const participant = participantById.get(pres.participant_id);
       if (!participant) return null;
+      const vote = voteByPresentation.get(pres.id);
+      const scores: CriteriaScores | null = vote
+        ? {
+            beleza_simpatia: vote.score_beleza_simpatia,
+            postura_elegancia: vote.score_postura_elegancia,
+            traje_apresentacao: vote.score_traje_apresentacao,
+            carisma_comunicacao: vote.score_carisma_comunicacao,
+            representatividade: vote.score_representatividade,
+          }
+        : null;
       return {
         presentationId: pres.id,
         participantName: participant.name,
         displayOrder: participant.display_order,
         status: pres.status,
-        score: scoreByPresentation.get(pres.id) ?? null,
+        score: vote?.score ?? null,
+        scores,
       };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null)
@@ -104,6 +122,7 @@ export async function getJudgeState(token: string): Promise<JudgeState | null> {
           participantName: current.participantName,
           status: current.status,
           myScore: current.score,
+          myScores: current.scores,
         }
       : null,
     history,

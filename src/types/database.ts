@@ -47,6 +47,11 @@ export type VoteRow = {
   presentation_id: string;
   judge_id: string;
   score: number;
+  score_beleza_simpatia: number;
+  score_postura_elegancia: number;
+  score_traje_apresentacao: number;
+  score_carisma_comunicacao: number;
+  score_representatividade: number;
   confirmed: boolean;
   created_at: string;
   updated_at: string;

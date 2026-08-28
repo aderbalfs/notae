@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { RankingBoard } from "@/components/ranking-board";
+import {
+  VOTE_CRITERIA,
+  averageCriteriaScores,
+  defaultCriteriaScores,
+  type CriteriaScores,
+  type CriterionKey,
+} from "@/lib/criteria";
 import type { JudgeState } from "@/lib/server/judge-state";
 
 interface JudgeVotingScreenProps {
@@ -88,7 +95,7 @@ export function JudgeVotingScreen({ token, initialState }: JudgeVotingScreenProp
               key={state.current.presentationId}
               token={token}
               presentationId={state.current.presentationId}
-              initialScore={state.current.myScore ?? 0}
+              initialScores={state.current.myScores ?? defaultCriteriaScores()}
               onSaved={refresh}
             />
           )}
@@ -127,7 +134,7 @@ export function JudgeVotingScreen({ token, initialState }: JudgeVotingScreenProp
 interface ScoreEditorProps {
   token: string;
   presentationId: string;
-  initialScore: number;
+  initialScores: CriteriaScores;
   onSaved: () => Promise<void>;
 }
 
@@ -136,14 +143,16 @@ interface ScoreEditorProps {
  * pai: assim o estado da nota reseta ao trocar de participante sem precisar
  * de um efeito para sincronizar (o que causaria renders em cascata).
  */
-function ScoreEditor({ token, presentationId, initialScore, onSaved }: ScoreEditorProps) {
-  const [scoreInput, setScoreInput] = useState(initialScore);
+function ScoreEditor({ token, presentationId, initialScores, onSaved }: ScoreEditorProps) {
+  const [scores, setScores] = useState<CriteriaScores>(initialScores);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
 
-  function adjustScore(delta: number) {
-    setScoreInput((prev) => Math.min(10, Math.max(0, Math.round((prev + delta) * 10) / 10)));
+  const finalScore = averageCriteriaScores(scores);
+
+  function setCriterionScore(key: CriterionKey, value: number) {
+    setScores((prev) => ({ ...prev, [key]: Math.min(10, Math.max(0, Math.round(value * 10) / 10)) }));
     setJustSaved(false);
   }
 
@@ -155,7 +164,7 @@ function ScoreEditor({ token, presentationId, initialScore, onSaved }: ScoreEdit
       const res = await fetch("/api/j/vote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, presentationId, score: scoreInput }),
+        body: JSON.stringify({ token, presentationId, scores }),
       });
       const body = await res.json();
       if (!res.ok) {
@@ -170,42 +179,34 @@ function ScoreEditor({ token, presentationId, initialScore, onSaved }: ScoreEdit
   }
 
   return (
-    <>
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => adjustScore(-0.1)}
-          className="h-11 w-11 shrink-0 rounded-full border border-zinc-300 text-lg font-semibold text-brand-blue-dark active:bg-zinc-100"
-          aria-label="Diminuir nota"
-          type="button"
-        >
-          −
-        </button>
-        <span className="w-24 text-center text-4xl font-bold tabular-nums text-brand-blue-dark">
-          {formatScore(scoreInput)}
-        </span>
-        <button
-          onClick={() => adjustScore(0.1)}
-          className="h-11 w-11 shrink-0 rounded-full border border-zinc-300 text-lg font-semibold text-brand-blue-dark active:bg-zinc-100"
-          aria-label="Aumentar nota"
-          type="button"
-        >
-          +
-        </button>
-      </div>
+    <div className="flex w-full flex-col gap-5">
+      {VOTE_CRITERIA.map((criterion) => (
+        <div key={criterion.key} className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-zinc-700">{criterion.label}</span>
+            <span className="text-lg font-bold tabular-nums text-brand-blue-dark">
+              {formatScore(scores[criterion.key])}
+            </span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={10}
+            step={0.1}
+            value={scores[criterion.key]}
+            onChange={(e) => setCriterionScore(criterion.key, parseFloat(e.target.value))}
+            className="w-full accent-brand-orange"
+            aria-label={criterion.label}
+          />
+        </div>
+      ))}
 
-      <input
-        type="range"
-        min={0}
-        max={10}
-        step={0.1}
-        value={scoreInput}
-        onChange={(e) => {
-          setScoreInput(parseFloat(e.target.value));
-          setJustSaved(false);
-        }}
-        className="w-full accent-brand-orange"
-        aria-label="Nota"
-      />
+      <div className="flex items-center justify-between rounded-lg bg-zinc-100 px-4 py-3">
+        <span className="text-sm font-medium text-zinc-600">Nota final</span>
+        <span className="text-2xl font-bold tabular-nums text-brand-blue-dark">
+          {formatScore(finalScore)}
+        </span>
+      </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
       {justSaved && !error && <p className="text-sm text-brand-blue">Nota confirmada.</p>}
@@ -218,6 +219,6 @@ function ScoreEditor({ token, presentationId, initialScore, onSaved }: ScoreEdit
       >
         {saving ? "Salvando..." : "Confirmar nota"}
       </button>
-    </>
+    </div>
   );
 }

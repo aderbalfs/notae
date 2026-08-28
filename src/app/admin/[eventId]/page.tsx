@@ -148,9 +148,17 @@ export default function AdminEventPage({
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-6 py-10">
-      <header>
-        <h1 className="text-2xl font-bold text-brand-blue-dark">{data.event.name}</h1>
-        <p className="text-sm text-zinc-500">Status: {data.event.status}</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-brand-blue-dark">{data.event.name}</h1>
+          <p className="text-sm text-zinc-500">Status: {data.event.status}</p>
+        </div>
+        <Link
+          href={`/admin/${eventId}/resultados`}
+          className="shrink-0 text-sm font-medium text-brand-blue underline"
+        >
+          Ver apuração
+        </Link>
       </header>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

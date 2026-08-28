@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { RankingBoard } from "@/components/ranking-board";
 import type { JudgeState } from "@/lib/server/judge-state";
 
 interface JudgeVotingScreenProps {
@@ -56,7 +57,14 @@ export function JudgeVotingScreen({ token, initialState }: JudgeVotingScreenProp
         <h1 className="text-xl font-bold text-brand-blue-dark">{state.judgeName}</h1>
       </header>
 
-      {state.current ? (
+      {state.votingComplete ? (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-center text-lg font-semibold text-brand-blue-dark">
+            Resultado final
+          </h2>
+          <RankingBoard ranking={state.ranking} />
+        </section>
+      ) : state.current ? (
         <section className="flex flex-col items-center gap-6 rounded-2xl border border-zinc-200 p-6">
           <div className="text-center">
             <p className="text-sm text-zinc-500">Apresentando agora</p>

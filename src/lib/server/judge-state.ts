@@ -1,6 +1,7 @@
 import "server-only";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { resolveJudgeByToken } from "@/lib/server/require-judge";
+import { getEventResults, type RankingEntry } from "@/lib/server/results";
 import type { PresentationStatus } from "@/types/database";
 
 export interface JudgeHistoryItem {
@@ -24,6 +25,8 @@ export interface JudgeState {
   eventStatus: string;
   current: JudgeCurrentPresentation | null;
   history: JudgeHistoryItem[];
+  votingComplete: boolean;
+  ranking: RankingEntry[];
 }
 
 /**
@@ -56,6 +59,8 @@ export async function getJudgeState(token: string): Promise<JudgeState | null> {
     ]);
 
   if (!event || !participants || !presentations) return null;
+
+  const results = await getEventResults(judge.event_id);
 
   const participantById = new Map(participants.map((p) => [p.id, p]));
   const scoreByPresentation = new Map((votes ?? []).map((v) => [v.presentation_id, v.score]));
@@ -102,5 +107,7 @@ export async function getJudgeState(token: string): Promise<JudgeState | null> {
         }
       : null,
     history,
+    votingComplete: results?.votingComplete ?? false,
+    ranking: results?.ranking ?? [],
   };
 }

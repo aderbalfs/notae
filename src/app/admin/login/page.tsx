@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { WaveField } from "@/components/ui/wave-field";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -33,10 +34,19 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-white px-6">
+    <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-white px-6">
+      <WaveField
+        headline=""
+        className="absolute inset-0 isolate h-full w-full rounded-none border-0 shadow-none"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-blue-dark/85 via-brand-blue/60 to-brand-orange/50"
+      />
+
       <form
         onSubmit={handleSubmit}
-        className="flex w-full max-w-xs flex-col gap-4"
+        className="relative z-10 flex w-full max-w-xs flex-col gap-4 rounded-2xl bg-white/95 p-6 shadow-2xl backdrop-blur-sm"
       >
         <h1 className="text-center text-2xl font-bold text-brand-blue-dark">
           Painel do administrador
